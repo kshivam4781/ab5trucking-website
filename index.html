@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AB5 Trucking - Desktop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+        }
+
+        .header {
+            background: #2c3e50;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .logo {
+            font-size: 14px;
+            font-weight: 500;
+            color: #ecf0f1;
+        }
+
+        .desktop {
+            height: calc(100vh - 40px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .background-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background-image: url('strong.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.1;
+            filter: brightness(1.5) contrast(0.8);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: move;
+            padding: 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 120px;
+            position: absolute;
+            user-select: none;
+            z-index: 20;
+        }
+
+        .app-icon.dragging {
+            cursor: grabbing;
+            z-index: 100;
+            opacity: 0.8;
+        }
+
+        .app-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .app-icon:active {
+            transform: scale(0.95);
+        }
+
+        .icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            font-size: 32px;
+            color: white;
+        }
+
+        .app-name {
+            font-size: 12px;
+            color: #ecf0f1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            max-width: 100px;
+            word-wrap: break-word;
+        }
+
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: rgba(44, 62, 80, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.3);
+        }
+
+        .start-button {
+            width: 40px;
+            height: 30px;
+            background: linear-gradient(135deg, #27ae60, #229954);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 20px;
+        }
+
+        .start-button:hover {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+    </style>
+    <script>
+        class DraggableApp {
+            constructor() {
+                this.appIcon = document.querySelector('.app-icon');
+                this.isDragging = false;
+                this.currentX = 0;
+                this.currentY = 0;
+                this.initialX = 0;
+                this.initialY = 0;
+                this.xOffset = 0;
+                this.yOffset = 0;
+                
+                this.init();
+            }
+
+            init() {
+                // Load saved position from cookies
+                this.loadPosition();
+                
+                // Set initial position if no saved position
+                if (this.xOffset === 0 && this.yOffset === 0) {
+                    this.xOffset = 20;
+                    this.yOffset = 20;
+                    this.setPosition();
+                }
+
+                this.appIcon.addEventListener('mousedown', (e) => this.dragStart(e));
+                document.addEventListener('mousemove', (e) => this.drag(e));
+                document.addEventListener('mouseup', () => this.dragEnd());
+                
+                // Prevent default drag behavior
+                this.appIcon.addEventListener('dragstart', (e) => e.preventDefault());
+            }
+
+            dragStart(e) {
+                this.initialX = e.clientX - this.xOffset;
+                this.initialY = e.clientY - this.yOffset;
+
+                if (e.target === this.appIcon || this.appIcon.contains(e.target)) {
+                    this.isDragging = true;
+                    this.appIcon.classList.add('dragging');
+                }
+            }
+
+            drag(e) {
+                if (this.isDragging) {
+                    e.preventDefault();
+                    
+                    this.currentX = e.clientX - this.initialX;
+                    this.currentY = e.clientY - this.initialY;
+
+                    this.xOffset = this.currentX;
+                    this.yOffset = this.currentY;
+
+                    this.setPosition();
+                }
+            }
+
+            dragEnd() {
+                this.initialX = this.currentX;
+                this.initialY = this.currentY;
+                this.isDragging = false;
+                this.appIcon.classList.remove('dragging');
+                
+                // Save position to cookies
+                this.savePosition();
+            }
+
+            setPosition() {
+                this.appIcon.style.transform = `translate(${this.currentX}px, ${this.currentY}px)`;
+            }
+
+            savePosition() {
+                const position = {
+                    x: this.xOffset,
+                    y: this.yOffset
+                };
+                
+                // Save to cookies with 1 year expiration
+                const expires = new Date();
+                expires.setFullYear(expires.getFullYear() + 1);
+                
+                document.cookie = `appPosition=${JSON.stringify(position)}; expires=${expires.toUTCString()}; path=/`;
+            }
+
+            loadPosition() {
+                const cookies = document.cookie.split(';');
+                const positionCookie = cookies.find(cookie => cookie.trim().startsWith('appPosition='));
+                
+                if (positionCookie) {
+                    try {
+                        const position = JSON.parse(positionCookie.split('=')[1]);
+                        this.xOffset = position.x || 0;
+                        this.yOffset = position.y || 0;
+                        this.currentX = this.xOffset;
+                        this.currentY = this.yOffset;
+                        this.setPosition();
+                    } catch (e) {
+                        console.log('Error loading position from cookie:', e);
+                    }
+                }
+            }
+        }
+
+        // Initialize draggable app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new DraggableApp();
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">AB5 Trucking Desktop</div>
+    </header>
+
+    <div class="desktop">
+        <div class="background-image"></div>
+        <div class="app-icon" onclick="window.open('https://passprotect.ab5trucking.com', '_blank')">
+            <div class="icon">🔒</div>
+            <div class="app-name">PasswordProtect</div>
+        </div>
+    </div>
+
+    <div class="taskbar">
+        <button class="start-button">Start</button>
+    </div>
+</body>
+</html> 
