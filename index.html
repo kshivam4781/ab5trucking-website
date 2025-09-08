@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AB5 Trucking - Desktop</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f3460'/%3E%3Ctext x='50%25' y='50%25' dy='.35em' text-anchor='middle' font-size='28' font-family='Segoe UI, Tahoma, Geneva, Verdana, sans-serif' fill='%23ffffff'%3EAB5%3C/text%3E%3C/svg%3E">
     <style>
         * {
             margin: 0;
@@ -38,6 +39,12 @@
             height: calc(100vh - 40px);
             position: relative;
             overflow: hidden;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, max-content));
+            gap: 16px;
+            padding: 20px;
+            align-content: start;
+            justify-content: start;
         }
 
         .background-image {
@@ -61,21 +68,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            cursor: move;
+            cursor: pointer;
             padding: 20px;
             border-radius: 8px;
             transition: all 0.3s ease;
             text-align: center;
             min-width: 120px;
-            position: absolute;
             user-select: none;
-            z-index: 20;
-        }
-
-        .app-icon.dragging {
-            cursor: grabbing;
-            z-index: 100;
-            opacity: 0.8;
         }
 
         .app-icon:hover {
@@ -138,116 +137,96 @@
         .start-button:hover {
             background: linear-gradient(135deg, #2ecc71, #27ae60);
         }
-    </style>
-    <script>
-        class DraggableApp {
-            constructor() {
-                this.appIcon = document.querySelector('.app-icon');
-                this.isDragging = false;
-                this.currentX = 0;
-                this.currentY = 0;
-                this.initialX = 0;
-                this.initialY = 0;
-                this.xOffset = 0;
-                this.yOffset = 0;
-                
-                this.init();
-            }
 
-            init() {
-                // Load saved position from cookies
-                this.loadPosition();
-                
-                // Set initial position if no saved position
-                if (this.xOffset === 0 && this.yOffset === 0) {
-                    this.xOffset = 20;
-                    this.yOffset = 20;
-                    this.setPosition();
-                }
-
-                this.appIcon.addEventListener('mousedown', (e) => this.dragStart(e));
-                document.addEventListener('mousemove', (e) => this.drag(e));
-                document.addEventListener('mouseup', () => this.dragEnd());
-                
-                // Prevent default drag behavior
-                this.appIcon.addEventListener('dragstart', (e) => e.preventDefault());
-            }
-
-            dragStart(e) {
-                this.initialX = e.clientX - this.xOffset;
-                this.initialY = e.clientY - this.yOffset;
-
-                if (e.target === this.appIcon || this.appIcon.contains(e.target)) {
-                    this.isDragging = true;
-                    this.appIcon.classList.add('dragging');
-                }
-            }
-
-            drag(e) {
-                if (this.isDragging) {
-                    e.preventDefault();
-                    
-                    this.currentX = e.clientX - this.initialX;
-                    this.currentY = e.clientY - this.initialY;
-
-                    this.xOffset = this.currentX;
-                    this.yOffset = this.currentY;
-
-                    this.setPosition();
-                }
-            }
-
-            dragEnd() {
-                this.initialX = this.currentX;
-                this.initialY = this.currentY;
-                this.isDragging = false;
-                this.appIcon.classList.remove('dragging');
-                
-                // Save position to cookies
-                this.savePosition();
-            }
-
-            setPosition() {
-                this.appIcon.style.transform = `translate(${this.currentX}px, ${this.currentY}px)`;
-            }
-
-            savePosition() {
-                const position = {
-                    x: this.xOffset,
-                    y: this.yOffset
-                };
-                
-                // Save to cookies with 1 year expiration
-                const expires = new Date();
-                expires.setFullYear(expires.getFullYear() + 1);
-                
-                document.cookie = `appPosition=${JSON.stringify(position)}; expires=${expires.toUTCString()}; path=/`;
-            }
-
-            loadPosition() {
-                const cookies = document.cookie.split(';');
-                const positionCookie = cookies.find(cookie => cookie.trim().startsWith('appPosition='));
-                
-                if (positionCookie) {
-                    try {
-                        const position = JSON.parse(positionCookie.split('=')[1]);
-                        this.xOffset = position.x || 0;
-                        this.yOffset = position.y || 0;
-                        this.currentX = this.xOffset;
-                        this.currentY = this.yOffset;
-                        this.setPosition();
-                    } catch (e) {
-                        console.log('Error loading position from cookie:', e);
-                    }
-                }
-            }
+        /* Start menu styles */
+        .start-menu {
+            position: fixed;
+            bottom: 50px;
+            left: 20px;
+            width: 360px;
+            height: 520px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
         }
 
-        // Initialize draggable app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            new DraggableApp();
-        });
-    </script>
+        .start-menu.open {
+            display: flex;
+        }
+
+        .start-search {
+            border: none;
+            outline: none;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: #f5f7fa;
+            color: #2c3e50;
+            width: 100%;
+            border-bottom: 1px solid #e6e9ef;
+        }
+
+        .start-list {
+            overflow: auto;
+            padding: 8px 0 16px;
+            flex: 1 1 auto;
+        }
+
+        .start-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .start-item:hover {
+            background: #f0f3f7;
+        }
+
+        .start-item-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            flex: 0 0 28px;
+        }
+
+        .start-item-texts {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .start-item-name {
+            color: #2c3e50;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .start-item-desc {
+            color: #607d8b;
+            font-size: 11px;
+            line-height: 1.2;
+        }
+
+        .start-section-title {
+            padding: 8px 12px;
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -256,22 +235,155 @@
 
     <div class="desktop">
         <div class="background-image"></div>
-        <div class="app-icon" onclick="window.open('https://passprotect.ab5trucking.com:8080', '_blank')">
+        <div class="app-icon" title="PasswordProtect: a tool to save your passwords" onclick="window.open('https://passprotect.ab5trucking.com:8080', '_blank')">
             <div class="icon">🔒</div>
             <div class="app-name">PasswordProtect</div>
         </div>
-    </div>
-    <div class="desktop">
-        <div class="background-image"></div>
-        <div class="app-icon" onclick="window.open('https://help.ab5trucking.com:8082', '_blank')">
-            <div class="icon">❓</div>
-            <div class="app-name">WebServices Knowledge Book</div>
+        <div class="app-icon" title="Knowledge Hub: information for sales of web services" onclick="window.open('https://help.ab5trucking.com', '_blank')">
+            <div class="icon">📘</div>
+            <div class="app-name">Knowledge Hub</div>
         </div>
     </div>
 
     <div class="taskbar">
         <button class="start-button">Start</button>
     </div>
+
+    <div class="start-menu" id="startMenu" aria-hidden="true">
+        <input class="start-search" id="startSearch" type="text" placeholder="Search apps..." aria-label="Search apps" autocomplete="off">
+        <div class="start-list" id="startList"></div>
+    </div>
+
+    <script>
+        (function() {
+            const startButton = document.querySelector('.start-button');
+            const startMenu = document.getElementById('startMenu');
+            const startSearch = document.getElementById('startSearch');
+            const startList = document.getElementById('startList');
+
+            function collectApps() {
+                const iconNodes = Array.from(document.querySelectorAll('.desktop .app-icon'));
+                const apps = iconNodes.map((node) => {
+                    const nameEl = node.querySelector('.app-name');
+                    const iconEl = node.querySelector('.icon');
+                    const name = nameEl ? nameEl.textContent.trim() : 'App';
+                    const icon = iconEl ? iconEl.textContent.trim().slice(0, 2) : '🧩';
+                    const desc = node.getAttribute('title') || '';
+                    let url = node.dataset && node.dataset.url ? node.dataset.url : '';
+                    if (!url) {
+                        const onclick = node.getAttribute('onclick') || '';
+                        const match = onclick.match(/window\.open\(['\"]([^'\"]+)/);
+                        if (match && match[1]) url = match[1];
+                    }
+                    return { name, url, icon, desc };
+                }).filter(app => !!app.url);
+
+                apps.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+                return apps;
+            }
+
+            function renderList(apps) {
+                startList.innerHTML = '';
+                // Group apps by first letter A-Z
+                const groups = new Map();
+                for (const app of apps) {
+                    const letter = (app.name[0] || '#').toUpperCase();
+                    if (!groups.has(letter)) groups.set(letter, []);
+                    groups.get(letter).push(app);
+                }
+
+                const letters = Array.from(groups.keys()).sort();
+                for (const letter of letters) {
+                    const items = groups.get(letter);
+                    if (!items || items.length === 0) continue; // skip empty
+
+                    const header = document.createElement('div');
+                    header.className = 'start-section-title';
+                    header.textContent = letter;
+                    startList.appendChild(header);
+
+                    items.forEach(app => {
+                        const item = document.createElement('div');
+                        item.className = 'start-item';
+                        item.title = app.desc || app.name;
+                        item.setAttribute('role', 'button');
+                        item.tabIndex = 0;
+
+                        const icon = document.createElement('div');
+                        icon.className = 'start-item-icon';
+                        icon.textContent = app.icon;
+
+                        const texts = document.createElement('div');
+                        texts.className = 'start-item-texts';
+
+                        const name = document.createElement('div');
+                        name.className = 'start-item-name';
+                        name.textContent = app.name;
+
+                        if (app.desc) {
+                            const desc = document.createElement('div');
+                            desc.className = 'start-item-desc';
+                            desc.textContent = app.desc;
+                            texts.appendChild(name);
+                            texts.appendChild(desc);
+                        } else {
+                            texts.appendChild(name);
+                        }
+
+                        item.appendChild(icon);
+                        item.appendChild(texts);
+
+                        function openApp() { window.open(app.url, '_blank'); }
+                        item.addEventListener('click', openApp);
+                        item.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openApp(); }
+                        });
+
+                        startList.appendChild(item);
+                    });
+                }
+            }
+
+            function openMenu() {
+                startMenu.classList.add('open');
+                startMenu.setAttribute('aria-hidden', 'false');
+                const apps = collectApps();
+                renderList(apps);
+                startSearch.value = '';
+                setTimeout(() => startSearch.focus(), 0);
+            }
+
+            function closeMenu() {
+                startMenu.classList.remove('open');
+                startMenu.setAttribute('aria-hidden', 'true');
+            }
+
+            startButton.addEventListener('click', () => {
+                const isOpen = startMenu.classList.contains('open');
+                if (isOpen) closeMenu(); else openMenu();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!startMenu.classList.contains('open')) return;
+                const withinMenu = startMenu.contains(e.target);
+                const onButton = startButton.contains(e.target);
+                if (!withinMenu && !onButton) closeMenu();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && startMenu.classList.contains('open')) closeMenu();
+            });
+
+            startSearch.addEventListener('input', () => {
+                const query = startSearch.value.trim().toLowerCase();
+                const apps = collectApps();
+                const filtered = apps.filter(a =>
+                    a.name.toLowerCase().includes(query) ||
+                    (a.desc && a.desc.toLowerCase().includes(query))
+                );
+                renderList(filtered);
+            });
+        })();
+    </script>
 </body>
 </html> 
-
